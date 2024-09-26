@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import readline from 'readline';
 
 const apiKey = "AIzaSyD_SyHYr-ZLhl4vfDQqSHmgIGOGp-HJdT8";
-
 const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -18,15 +18,15 @@ const chat = model.startChat({
   ],
 });
 
+// Initialize chat history if it doesn't exist
+if (!chat.history) {
+  chat.history = [];
+}
+
+// Function to send a message and update chat history
 async function sendMessageAndUpdateHistory(message) {
-  // Send user message
   let result = await chat.sendMessage(message);
   console.log("Model:", result.response.text());
-
-  // Initialize chat.history if it doesn't exist
-  if (!chat.history) {
-    chat.history = [];
-  }
 
   // Append user message to chat history
   chat.history.push({
@@ -43,13 +43,19 @@ async function sendMessageAndUpdateHistory(message) {
   return result.response.text();
 }
 
-// Example usage
-async function main() {
-  await sendMessageAndUpdateHistory("I have 2 dogs in my house.");
-  await sendMessageAndUpdateHistory("How many paws are in my house?");
-  
-  // You can continue to send messages like this
-  await sendMessageAndUpdateHistory("What are their names?");
+// Create readline interface for terminal input
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+// Function to prompt for user input
+function promptUser() {
+  rl.question('You: ', async (input) => {
+    await sendMessageAndUpdateHistory(input);
+    promptUser(); // Ask for the next input
+  });
 }
 
-main();
+// Start the chat
+promptUser();
